@@ -1,0 +1,63 @@
+{
+  "nodes": {
+    "cosmic-comp": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789183676,
+        "narHash": "sha256-oQNaBnXY07BUn1ooia1XgAI3G/HbSnEvEPrqvTOMnGc=",
+        "owner": "Pheoxy",
+        "repo": "cosmic-comp",
+        "rev": "cd456c423185fa10b9157d93f6dd213946e27de5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Pheoxy",
+        "ref": "vulkan-renderer-e3d461a",
+        "repo": "cosmic-comp",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1789006805,
+        "narHash": "sha256-xB8mKMOx1IA9vTDNLmJZ6n4wCMq/cuWBBOzGCRnqxrU=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "8ce4ef6cb6f871616146b9fe26d2a5ae594e94fe",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "cosmic-comp": "cosmic-comp",
+        "nixpkgs": "nixpkgs",
+        "smithay": "smithay"
+      }
+    },
+    "smithay": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789183701,
+        "narHash": "sha256-NTbumiBLSP2kuKJenRmUB3uvSIZX2eGw/WKVsLMnGlI=",
+        "owner": "Pheoxy",
+        "repo": "smithay",
+        "rev": "dc822d49c6144b3b43f993874ea53285a0aa2ef9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Pheoxy",
+        "ref": "add-vulkan-renderer-support-cosmic-e3d461a",
+        "repo": "smithay",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
