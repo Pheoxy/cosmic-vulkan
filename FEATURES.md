@@ -15,14 +15,14 @@ Legend: ✅ complete/working · ⚠️ partial/intermittent · ❌ not implement
 |---|:---:|:---:|---|
 | Basic window compositing | ✅ | ✅ | |
 | Window shadows (blurred) | ✅ | ✅ | Vulkan shadow pipeline implemented via the generic `Frame::draw_shadow` path, not a GLES-only shader |
-| SHM screencopy (screenshots, screen capture) | ✅ | ✅ | Vulkan path defers the SHM copy off the render-dispatch thread; GLES stays eager to match its pre-existing behavior |
+| SHM screencopy (screenshots, screen capture) | ✅ | ⚠️ | Vulkan path defers the SHM copy off the render-dispatch thread; GLES stays eager to match its pre-existing behavior. Under Vulkan, the screenshot tool's post-capture viewer never opens after a capture - not yet confirmed whether this is Vulkan-specific or a shared code path also affected under GLES |
 | Dmabuf import/export | ✅ | ✅ | Vulkan renderer-tracked rebinds now preserve buffer contents across a rebind instead of losing them |
 | Runtime renderer selection | n/a (default) | ✅ | `COSMIC_RENDERER` environment variable; no compile-time feature flag required to switch between renderers |
 | Multi-GPU / hybrid graphics (PRIME offload) | ✅ | ✅ | Both renderers share the same `GpuManager`/`MultiRenderer` multi-GPU infrastructure |
 | Adaptive sync / VRR | ✅ | ✅ | |
 | Hardware cursor plane assignment | ✅ | ⚠️ | Intermittent fallback to software cursor compositing observed under Vulkan; not yet confirmed whether this is Vulkan-specific or a shared code path also affected under GLES |
 | Screen filter / accessibility zoom postprocessing | ✅ | ❌ | Not implemented for the Vulkan renderer path yet |
-| Screen sharing (`wlr-screencopy`-style output capture) | ✅ | ❌ | Matches wlroots' own upstream gap for this capture path; not COSMIC-specific |
+| Screen sharing (`wlr-screencopy`-style output capture) | ✅ | ⚠️ | Works under Vulkan, but the shared stream's frame rate is capped to the screen-share session's own fps rather than tracking the output's real refresh rate |
 | Debug/profiling tooling (Tracy, Vulkan validation layers) | n/a | ✅ | Validation layers available under debug builds via this project's dev shell |
 
 Anything not listed here has not been specifically compared between the two
