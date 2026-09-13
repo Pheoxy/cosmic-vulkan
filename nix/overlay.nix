@@ -106,10 +106,10 @@ epoch170
     # adds `renderer_vulkan` to `buildFeatures`/`cargoBuildFeatures` below -
     # without setting these too, `cargoCheckHook` (cosmic-comp's `cargo
     # test`/check phase, separate from the actual `cargoBuildHook` compile)
-    # silently runs with no `renderer_vulkan`, hits the pre-existing
-    # zoom-postprocessing bit-rot that's cfg'd out under that feature), and fails the whole build even though
-    # the real compiled binary (from cargoBuildHook, which *does* get the
-    # right features) is fine.
+    # silently runs with no `renderer_vulkan`, hits pre-existing
+    # zoom-postprocessing bit-rot that's cfg'd out under that feature, and
+    # fails the whole build even though the real compiled binary (from
+    # cargoBuildHook, which *does* get the right features) is fine.
     buildFeatures = (old.buildFeatures or [ ]) ++ [ "renderer_vulkan" ];
     cargoBuildFeatures = (old.cargoBuildFeatures or [ ]) ++ [ "renderer_vulkan" ];
     checkFeatures = (old.checkFeatures or [ ]) ++ [ "renderer_vulkan" ];
