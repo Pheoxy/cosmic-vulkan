@@ -17,6 +17,19 @@
         "type": "github"
       }
     },
+    "cosmic-greeter": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789293121,
+        "narHash": "sha256-Vbvv8/9A3SpAmCUF0sqym8NUP2mQLdUS5nIunjXmf/w=",
+        "path": "/home/dhancock/Projects/cosmic-greeter",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/dhancock/Projects/cosmic-greeter",
+        "type": "path"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1789006805,
@@ -36,6 +49,7 @@
     "root": {
       "inputs": {
         "cosmic-comp": "cosmic-comp",
+        "cosmic-greeter": "cosmic-greeter",
         "nixpkgs": "nixpkgs",
         "smithay": "smithay"
       }
