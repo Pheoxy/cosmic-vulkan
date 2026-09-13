@@ -47,12 +47,16 @@ for you. Importing it replaces GLES `cosmic-comp`/`cosmic-greeter` for the
 *entire* generation it's imported into - put it behind a
 [specialisation](https://nixos.org/manual/nixos/stable/#sec-specialisation)
 if you want to keep a normal GLES generation to boot back into, rather than
-importing it directly into your main config. See this project's own
-`specialisations/cosmic-vulkan.nix` pattern in the host config this was
-developed against for a worked example (debug build, extra Vulkan
-validation-layer tooling, a `systemd` unit to make DRM debugfs readable) and
-`specialisations/cosmic-vulkan-release.nix` for a `--release` variant meant
-for actual use/benchmarking rather than compositor development.
+importing it directly into your main config:
+
+```nix
+specialisation.cosmic-vulkan.configuration = {
+  imports = [ inputs.cosmic-vulkan.nixosModules.default ];
+};
+```
+
+Pick the resulting boot entry to try the Vulkan renderer; reboot into the
+untagged generation to go back to GLES.
 
 ### Overriding `cargoHash`
 
@@ -104,6 +108,7 @@ validation layers.
 
 ## Status
 
-Bring-up/tracking project, not a finished renderer. See each fork's own
-commit history for what's actually implemented so far. Known open issues
-tracked separately in a companion debugging project are not duplicated here.
+Bring-up/tracking project, not a finished renderer. See
+[`FEATURES.md`](FEATURES.md) for a feature-by-feature GLES vs. Vulkan
+comparison and benchmark results, and each fork's own commit history for
+implementation detail.
