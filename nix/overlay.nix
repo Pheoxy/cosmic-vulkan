@@ -6,6 +6,15 @@
 # cosmic-comp/smithay, because the greeter reads cosmic-comp-config directly
 # and inherits any fix or regression made there.
 #
+# Also applies cosmic-epoch-1_7_0.nix as a base layer before the Vulkan
+# overrides, so the rest of the COSMIC desktop (cosmic-panel, cosmic-session,
+# xdg-desktop-portal-cosmic, ...) is on the same epoch-1.7.0 release these
+# branches were developed against, instead of leaving them on whatever older
+# version nixpkgs ships by default - a mismatched desktop is a real way for
+# this to "not work as well" for anyone who applies only this overlay. Use
+# `overlays.cosmic-epoch-1_7_0` directly instead if you want that bump without
+# the Vulkan renderer.
+#
 # Exclusive KMS Vulkan, not default COSMIC GLES. Do not mix with GLES
 # hybrid-export smithay patches. Each cargoHash changes whenever its
 # corresponding source tree changes; override the relevant one if
@@ -33,6 +42,18 @@
 }:
 final: prev:
 let
+  # Bump the whole COSMIC desktop to epoch-1.7.0 first (see
+  # cosmic-epoch-1_7_0.nix for why), then layer the Vulkan-specific
+  # cosmic-comp/cosmic-greeter overrides on top of *that* base rather than
+  # on top of whatever version nixpkgs ships by default - so `old.pname`/
+  # `old.buildInputs`/etc reflect the correct epoch-1.7.0 package shape, and
+  # the resulting `-vulkan` version string chains from "1.7.0", not
+  # whatever older version nixpkgs happens to have. `base` is everything
+  # this overlay returns except the two packages Vulkan overrides again
+  # below.
+  epoch170 = import ./cosmic-epoch-1_7_0.nix final prev;
+  base = prev // epoch170;
+
   compSrc = prev.runCommand "cosmic-comp-vulkan-src" { } ''
     cp -a ${cosmic-comp}/. "$out"
     chmod -R u+w "$out"
@@ -44,7 +65,7 @@ let
       --replace-fail 'smithay = { path = "../smithay" }' \
                      'smithay = { path = "./smithay" }'
   '';
-  compOldVersion = prev.cosmic-comp.version or "1.0.0";
+  compOldVersion = base.cosmic-comp.version or "1.7.0";
   compVersion = "${compOldVersion}-vulkan";
   libdisplayInfo = prev.libdisplay-info_0_3 or prev.libdisplay-info;
 
@@ -60,11 +81,12 @@ let
   # `cosmic-comp` independently and needs a manual bump (in cosmic-greeter's
   # own Cargo.toml) if `cosmic-comp`'s branch moves - the same maintenance a
   # non-Nix Cargo consumer of a git-patched dependency would have anyway.
-  greeterOldVersion = prev.cosmic-greeter.version or "1.6.0";
+  greeterOldVersion = base.cosmic-greeter.version or "1.7.0";
   greeterVersion = "${greeterOldVersion}-vulkan";
 in
-{
-  cosmic-comp = prev.cosmic-comp.overrideAttrs (old: {
+epoch170
+// {
+  cosmic-comp = base.cosmic-comp.overrideAttrs (old: {
     src = compSrc;
     version = compVersion;
     cargoHash = cargoHash;
@@ -100,7 +122,7 @@ in
       ];
   });
 
-  cosmic-greeter = prev.cosmic-greeter.overrideAttrs (old: {
+  cosmic-greeter = base.cosmic-greeter.overrideAttrs (old: {
     src = cosmic-greeter;
     version = greeterVersion;
     cargoHash = greeterCargoHash;

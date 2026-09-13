@@ -32,6 +32,11 @@
     {
       overlays.cosmic-vulkan = mkOverlay;
       overlays.default = mkOverlay { };
+      # The epoch-1.7.0 desktop bump on its own, independent of the Vulkan
+      # renderer work - overlays.cosmic-vulkan/default already apply this as
+      # a base layer, so use this directly only if you want the bump without
+      # the Vulkan renderer.
+      overlays.cosmic-epoch-1_7_0 = import ./nix/cosmic-epoch-1_7_0.nix;
 
       nixosModules.cosmic-vulkan = import ./nix/module.nix {
         overlay = self.overlays.default;
