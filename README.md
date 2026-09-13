@@ -110,5 +110,6 @@ validation layers.
 
 Bring-up/tracking project, not a finished renderer. See
 [`FEATURES.md`](FEATURES.md) for a feature-by-feature GLES vs. Vulkan
-comparison and benchmark results, and each fork's own commit history for
-implementation detail.
+comparison and benchmark results, [`ISSUES.md`](ISSUES.md) for bugs found
+during development tracked against their upstream status, and each fork's
+own commit history for implementation detail.
