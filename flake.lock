@@ -3,11 +3,11 @@
     "cosmic-comp": {
       "flake": false,
       "locked": {
-        "lastModified": 1789183676,
-        "narHash": "sha256-oQNaBnXY07BUn1ooia1XgAI3G/HbSnEvEPrqvTOMnGc=",
+        "lastModified": 1789289655,
+        "narHash": "sha256-LK4TLGdjZA5kDF4Q7YLqsvUMPMKRkgnH3UX0cvYjB08=",
         "owner": "Pheoxy",
         "repo": "cosmic-comp",
-        "rev": "cd456c423185fa10b9157d93f6dd213946e27de5",
+        "rev": "dacfec6b5774662bb67b11636b99206232a2f0a3",
         "type": "github"
       },
       "original": {
@@ -20,11 +20,11 @@
     "cosmic-greeter": {
       "flake": false,
       "locked": {
-        "lastModified": 1789293121,
-        "narHash": "sha256-+aKrj6GPM6BCbAJUzETLTHfVaa2JtnA5yqGsrQ8zISs=",
+        "lastModified": 1789296223,
+        "narHash": "sha256-Ew8K5eH1MmeSM126U4SIUEHTv0lNis9x+pSgFn3JHs4=",
         "owner": "Pheoxy",
         "repo": "cosmic-greeter",
-        "rev": "d48f9fed1a7621848a39ada792469adb45b8e6a0",
+        "rev": "7e76893787a280e148f19c590fd24b63b1e58bc2",
         "type": "github"
       },
       "original": {
@@ -61,11 +61,11 @@
     "smithay": {
       "flake": false,
       "locked": {
-        "lastModified": 1789183701,
-        "narHash": "sha256-NTbumiBLSP2kuKJenRmUB3uvSIZX2eGw/WKVsLMnGlI=",
+        "lastModified": 1789231712,
+        "narHash": "sha256-9tGtgG6OWomfER68a4jTu+zz+XgwkKPswoUQrZflXAM=",
         "owner": "Pheoxy",
         "repo": "smithay",
-        "rev": "dc822d49c6144b3b43f993874ea53285a0aa2ef9",
+        "rev": "8175dede32ad4662afc387936f72e89e80d0d73c",
         "type": "github"
       },
       "original": {

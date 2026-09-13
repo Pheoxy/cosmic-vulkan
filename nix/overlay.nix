@@ -24,8 +24,12 @@
   cosmic-greeter,
 }:
 {
-  cargoHash ? "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-  greeterCargoHash ? "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+  # Computed 2026-09-13 against the pinned inputs in flake.lock at that time
+  # (cosmic-comp dacfec6, cosmic-greeter 7e76893) - re-derive via the
+  # documented hash-mismatch trick (build .cargoDeps with a placeholder hash
+  # and read the "got:" value) whenever either input's Cargo.lock changes.
+  cargoHash ? "sha256-SrcH1IRNvXBdMkddlds8IVlaSgvdn9jGv1XaEHzUtLE=",
+  greeterCargoHash ? "sha256-N6fsXQb5nSsujWH0dTLvXs358bUe5vJFzZQJu0zuxSg=",
 }:
 final: prev:
 let
@@ -44,23 +48,18 @@ let
   compVersion = "${compOldVersion}-vulkan";
   libdisplayInfo = prev.libdisplay-info_0_3 or prev.libdisplay-info;
 
-  # cosmic-greeter's cosmic-comp-config comes from pop-os/cosmic-comp's
-  # unpatched master by default (see cosmic-greeter's own Cargo.toml
-  # `[patch."https://github.com/pop-os/cosmic-comp"]`, which points at a
-  # local `../cosmic-comp/cosmic-comp-config` for dev builds outside Nix) -
-  # bundle this branch's cosmic-comp-config into the sandbox and repoint the
-  # patch at it, the same way compSrc bundles smithay into cosmic-comp above.
-  greeterSrc = prev.runCommand "cosmic-greeter-vulkan-src" { } ''
-    cp -a ${cosmic-greeter}/. "$out"
-    chmod -R u+w "$out"
-    rm -rf "$out/target" "$out/result"
-    cp -a ${cosmic-comp}/cosmic-comp-config "$out/cosmic-comp-config"
-    chmod -R u+w "$out/cosmic-comp-config"
-    rm -rf "$out/cosmic-comp-config/target"
-    substituteInPlace "$out/Cargo.toml" \
-      --replace-fail 'cosmic-comp-config = { path = "../cosmic-comp/cosmic-comp-config" }' \
-                     'cosmic-comp-config = { path = "./cosmic-comp-config" }'
-  '';
+  # cosmic-greeter's own Cargo.toml already patches cosmic-comp-config to a
+  # specific pinned rev on Pheoxy/cosmic-comp (not upstream pop-os/cosmic-comp,
+  # which lacks the EDID-serial output-identity fix) - see cosmic-greeter's
+  # `[patch."https://github.com/pop-os/cosmic-comp"]`. Cargo's own git
+  # vendoring (via fetchCargoVendor below) resolves that during the build the
+  # same way it already resolves every other git dependency, so - unlike
+  # cosmic-comp's smithay path dependency above - no source bundling or
+  # substitution is needed here; `cosmic-greeter` (the flake input) is used
+  # directly as `src`. This does mean cosmic-greeter's pinned rev tracks
+  # `cosmic-comp` independently and needs a manual bump (in cosmic-greeter's
+  # own Cargo.toml) if `cosmic-comp`'s branch moves - the same maintenance a
+  # non-Nix Cargo consumer of a git-patched dependency would have anyway.
   greeterOldVersion = prev.cosmic-greeter.version or "1.6.0";
   greeterVersion = "${greeterOldVersion}-vulkan";
 in
@@ -75,8 +74,24 @@ in
       inherit (old) pname;
       hash = cargoHash;
     };
+    # `checkFeatures`/`cargoCheckFeatures` are NOT re-derived from
+    # `buildFeatures`/`cargoBuildFeatures` on override: nixpkgs' rust generic
+    # builder computes `cargoCheckFeatures = checkFeatures ? buildFeatures`
+    # once, when `rustPlatform.buildRustPackage {...}` is originally
+    # evaluated inside package.nix - before this overlay's `overrideAttrs`
+    # ever runs. Since stock cosmic-comp never sets `buildFeatures`, that
+    # already-baked `cargoCheckFeatures` stays `[]` even after this override
+    # adds `renderer_vulkan` to `buildFeatures`/`cargoBuildFeatures` below -
+    # without setting these too, `cargoCheckHook` (cosmic-comp's `cargo
+    # test`/check phase, separate from the actual `cargoBuildHook` compile)
+    # silently runs with no `renderer_vulkan`, hits the pre-existing
+    # zoom-postprocessing bit-rot that's cfg'd out under that feature), and fails the whole build even though
+    # the real compiled binary (from cargoBuildHook, which *does* get the
+    # right features) is fine.
     buildFeatures = (old.buildFeatures or [ ]) ++ [ "renderer_vulkan" ];
     cargoBuildFeatures = (old.cargoBuildFeatures or [ ]) ++ [ "renderer_vulkan" ];
+    checkFeatures = (old.checkFeatures or [ ]) ++ [ "renderer_vulkan" ];
+    cargoCheckFeatures = (old.cargoCheckFeatures or [ ]) ++ [ "renderer_vulkan" ];
     buildInputs =
       (builtins.filter (p: (p.pname or "") != "libdisplay-info") (old.buildInputs or [ ]))
       ++ [
@@ -86,11 +101,11 @@ in
   });
 
   cosmic-greeter = prev.cosmic-greeter.overrideAttrs (old: {
-    src = greeterSrc;
+    src = cosmic-greeter;
     version = greeterVersion;
     cargoHash = greeterCargoHash;
     cargoDeps = prev.rustPlatform.fetchCargoVendor {
-      src = greeterSrc;
+      src = cosmic-greeter;
       version = greeterVersion;
       inherit (old) pname;
       hash = greeterCargoHash;
