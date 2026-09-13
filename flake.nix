@@ -7,14 +7,7 @@
     smithay.flake = false;
     cosmic-comp.url = "github:Pheoxy/cosmic-comp/vulkan-renderer-e3d461a";
     cosmic-comp.flake = false;
-    # TODO: no `Pheoxy/cosmic-greeter` fork exists yet (checked 2026-09-13:
-    # https://api.github.com/repos/Pheoxy/cosmic-greeter -> 404). Until one is
-    # created and this branch is pushed there, point at the local checkout so
-    # the flake still evaluates and builds on this machine. Swap this for
-    # `github:Pheoxy/cosmic-greeter/output-identity-edid-serial` (matching the
-    # smithay/cosmic-comp pattern above) once that fork exists - `nix flake
-    # lock` won't need anything else changed at that point.
-    cosmic-greeter.url = "path:..//cosmic-greeter";
+    cosmic-greeter.url = "github:Pheoxy/cosmic-greeter/output-identity-edid-serial";
     cosmic-greeter.flake = false;
   };
 
