@@ -21,13 +21,17 @@
       "flake": false,
       "locked": {
         "lastModified": 1789293121,
-        "narHash": "sha256-Vbvv8/9A3SpAmCUF0sqym8NUP2mQLdUS5nIunjXmf/w=",
-        "path": "/home/dhancock/Projects/cosmic-greeter",
-        "type": "path"
+        "narHash": "sha256-+aKrj6GPM6BCbAJUzETLTHfVaa2JtnA5yqGsrQ8zISs=",
+        "owner": "Pheoxy",
+        "repo": "cosmic-greeter",
+        "rev": "d48f9fed1a7621848a39ada792469adb45b8e6a0",
+        "type": "github"
       },
       "original": {
-        "path": "/home/dhancock/Projects/cosmic-greeter",
-        "type": "path"
+        "owner": "Pheoxy",
+        "ref": "output-identity-edid-serial",
+        "repo": "cosmic-greeter",
+        "type": "github"
       }
     },
     "nixpkgs": {
