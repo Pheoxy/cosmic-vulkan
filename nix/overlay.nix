@@ -33,10 +33,14 @@
   cosmic-greeter,
 }:
 {
-  # Computed 2026-09-13 against the pinned inputs in flake.lock at that time
-  # (cosmic-comp dacfec6, cosmic-greeter 7e76893) - re-derive via the
-  # documented hash-mismatch trick (build .cargoDeps with a placeholder hash
-  # and read the "got:" value) whenever either input's Cargo.lock changes.
+  # cargoHash was computed against cosmic-comp rev aa3a3200 and should still
+  # be valid (that rev's own Cargo.lock is unchanged from the value this was
+  # derived against). greeterCargoHash was derived against cosmic-greeter rev
+  # 7e76893, but cosmic-greeter's Cargo.lock has since changed (its
+  # cosmic-comp-config patch now points at aa3a3200 too), so this value is
+  # stale and needs re-deriving. Both: re-derive via the documented
+  # hash-mismatch trick (build .cargoDeps with a placeholder hash and read
+  # the "got:" value) whenever either input's Cargo.lock changes.
   cargoHash ? "sha256-SrcH1IRNvXBdMkddlds8IVlaSgvdn9jGv1XaEHzUtLE=",
   greeterCargoHash ? "sha256-N6fsXQb5nSsujWH0dTLvXs358bUe5vJFzZQJu0zuxSg=",
 }:
