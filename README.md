@@ -8,17 +8,18 @@ GLES.
 
 ## What this tracks
 
-Three individual project forks, each carrying the changes this effort needs:
+Four individual project forks, each carrying the changes this effort needs:
 
 | Package | Fork | Branch |
 |---|---|---|
 | [`smithay`](https://github.com/Pheoxy/smithay) | Vulkan renderer support for `cosmic-comp` | `add-vulkan-renderer-support-cosmic-e3d461a` |
-| [`cosmic-comp`](https://github.com/Pheoxy/cosmic-comp) | Runtime GLES/Vulkan renderer selection (`KmsApi`, `COSMIC_RENDERER` env var), plus an EDID-serial-based output-identity fix | `vulkan-renderer-e3d461a` |
+| [`cosmic-comp`](https://github.com/Pheoxy/cosmic-comp) | Runtime GLES/Vulkan renderer selection (`KmsApi`, `COSMIC_RENDERER` env var), an EDID-serial-based output-identity fix, and a hardware `CTM`/`GAMMA_LUT` color pipeline (accessibility screen filter + a `wlr-gamma-control-unstable-v1` server for night light) | `vulkan-renderer-e3d461a` |
 | [`cosmic-greeter`](https://github.com/Pheoxy/cosmic-greeter) | The same output-identity fix as `cosmic-comp` - the greeter reads `cosmic-comp`'s `outputs.ron` directly and shared the same connector-name-only matching bug | `output-identity-edid-serial` |
+| [`cosmic-settings`](https://github.com/Pheoxy/cosmic-settings) | Re-enables the night-light toggle (dormant since 2024, kept ready for exactly this) as a client of `cosmic-comp`'s new gamma-control protocol support | `night-light-vulkan` |
 
-`cosmic-comp` and `cosmic-greeter` are Vulkan-patched by this overlay.
-Everything else in the COSMIC desktop (`cosmic-panel`, `cosmic-session`,
-`cosmic-settings`, `xdg-desktop-portal-cosmic`, ...) is left as whatever
+`cosmic-comp`, `cosmic-greeter`, and `cosmic-settings` are Vulkan-patched by
+this overlay. Everything else in the COSMIC desktop (`cosmic-panel`,
+`cosmic-session`, `xdg-desktop-portal-cosmic`, ...) is left as whatever
 epoch-1.7.0 build this overlay's `cosmic-epoch-1_7_0.nix` bump provides - see
 below for why that matters.
 
@@ -61,15 +62,16 @@ untagged generation to go back to GLES.
 ### Overriding `cargoHash`
 
 `overlays.cosmic-vulkan` (unlike `overlays.default`, which is this called
-with no arguments) is a function that takes the two cargo vendor hashes, in
+with no arguments) is a function that takes the cargo vendor hashes, in
 case the tracked branches move and the hashes baked into `nix/overlay.nix`
 go stale:
 
 ```nix
 nixpkgs.overlays = [
   (inputs.cosmic-vulkan.overlays.cosmic-vulkan {
-    cargoHash = "sha256-...";         # cosmic-comp
-    greeterCargoHash = "sha256-...";  # cosmic-greeter
+    cargoHash = "sha256-...";          # cosmic-comp
+    greeterCargoHash = "sha256-...";   # cosmic-greeter
+    settingsCargoHash = "sha256-...";  # cosmic-settings
   })
 ];
 ```

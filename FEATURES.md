@@ -21,7 +21,8 @@ Legend: ✅ complete/working · ⚠️ partial/intermittent · ❌ not implement
 | Multi-GPU / hybrid graphics (PRIME offload) | ✅ | ✅ | Both renderers share the same `GpuManager`/`MultiRenderer` multi-GPU infrastructure |
 | Adaptive sync / VRR | ✅ | ✅ | |
 | Hardware cursor plane assignment | ✅ | ⚠️ | Intermittent fallback to software cursor compositing observed under Vulkan; not yet confirmed whether this is Vulkan-specific or a shared code path also affected under GLES |
-| Screen filter / accessibility zoom postprocessing | ✅ | ❌ | Not implemented for the Vulkan renderer path yet |
+| Screen filter (invert, colorblind correction) | ✅ | ✅ | Now applied via the hardware `CTM`/`GAMMA_LUT` CRTC properties instead of a compositing shader - renderer-agnostic, so this works identically under GLES and Vulkan on any CRTC that supports it (confirmed on both an Intel and an NVIDIA GPU), falling back to the pre-existing GLES-only shader (with a warning) only on hardware that doesn't. Not yet visually verified on real hardware |
+| Night light (color temperature) | n/a (new) | ✅ | New feature, not previously present under either renderer. Server-side `wlr-gamma-control-unstable-v1` in `cosmic-comp` (same hardware `CTM`/`GAMMA_LUT` path as the screen filter, so also renderer-agnostic); `cosmic-settings`' own toggle is a client of it, same as `gammastep`/`wlsunset`. Scoped to a fixed-temperature on/off toggle for now, no schedule automation yet. Not yet visually verified on real hardware |
 | Screen sharing (`wlr-screencopy`-style output capture) | ✅ | ⚠️ | Works under Vulkan, but the shared stream's frame rate is capped to the screen-share session's own fps rather than tracking the output's real refresh rate |
 | Debug/profiling tooling (Tracy, Vulkan validation layers) | n/a | ✅ | Validation layers available under debug builds via this project's dev shell |
 
