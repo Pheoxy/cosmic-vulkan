@@ -34,6 +34,23 @@
         "type": "github"
       }
     },
+    "cosmic-settings": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789365872,
+        "narHash": "sha256-BgKLXyYAMwpOq0UdgW6n2wDtBcH6qOZUZhjeeWgcaME=",
+        "owner": "Pheoxy",
+        "repo": "cosmic-settings",
+        "rev": "458837de55400c15c1ffdf3b6876983733091123",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Pheoxy",
+        "ref": "night-light-vulkan",
+        "repo": "cosmic-settings",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1789006805,
@@ -54,6 +71,7 @@
       "inputs": {
         "cosmic-comp": "cosmic-comp",
         "cosmic-greeter": "cosmic-greeter",
+        "cosmic-settings": "cosmic-settings",
         "nixpkgs": "nixpkgs",
         "smithay": "smithay"
       }

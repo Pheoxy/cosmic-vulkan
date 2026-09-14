@@ -1,10 +1,12 @@
 # Overlay for NixOS users who want to replace nixpkgs cosmic-comp (and
-# cosmic-greeter) with this project's Vulkan-renderer bring-up branches:
-# smithay (renderer support) + cosmic-comp (KmsApi runtime GLES/Vulkan
-# selection) + cosmic-greeter (shares cosmic-comp's outputs.ron and needed the
-# same EDID-serial output-identity fix). Tracking all three here, not just
-# cosmic-comp/smithay, because the greeter reads cosmic-comp-config directly
-# and inherits any fix or regression made there.
+# cosmic-greeter, cosmic-settings) with this project's Vulkan-renderer
+# bring-up branches: smithay (renderer support) + cosmic-comp (KmsApi runtime
+# GLES/Vulkan selection, plus the hardware CTM/GAMMA_LUT color pipeline) +
+# cosmic-greeter (shares cosmic-comp's outputs.ron and needed the same
+# EDID-serial output-identity fix) + cosmic-settings (the night-light toggle
+# UI, a wlr-gamma-control-unstable-v1 client of cosmic-comp's new protocol
+# support). Tracking all four here, not just cosmic-comp/smithay, because
+# each of the others depends on or drives something cosmic-comp changed.
 #
 # Also applies cosmic-epoch-1_7_0.nix as a base layer before the Vulkan
 # overrides, so the rest of the COSMIC desktop (cosmic-panel, cosmic-session,
@@ -22,8 +24,9 @@
 #
 #   nixpkgs.overlays = [
 #     (inputs.cosmic-vulkan.overlays.cosmic-vulkan {
-#       cargoHash = "sha256-...";         # cosmic-comp
-#       greeterCargoHash = "sha256-...";  # cosmic-greeter
+#       cargoHash = "sha256-...";          # cosmic-comp
+#       greeterCargoHash = "sha256-...";   # cosmic-greeter
+#       settingsCargoHash = "sha256-...";  # cosmic-settings
 #     })
 #   ];
 #
@@ -31,6 +34,7 @@
   cosmic-comp,
   smithay,
   cosmic-greeter,
+  cosmic-settings,
 }:
 {
   # cargoHash was computed against cosmic-comp rev aa3a3200 and should still
@@ -43,6 +47,9 @@
   # the "got:" value) whenever either input's Cargo.lock changes.
   cargoHash ? "sha256-SrcH1IRNvXBdMkddlds8IVlaSgvdn9jGv1XaEHzUtLE=",
   greeterCargoHash ? "sha256-N6fsXQb5nSsujWH0dTLvXs358bUe5vJFzZQJu0zuxSg=",
+  # Never built yet - genuine placeholder, not derived against anything. The first real build
+  # attempt will fail with a hash mismatch naming the correct value; put that here once known.
+  settingsCargoHash ? "sha256-0000000000000000000000000000000000000000000=",
 }:
 final: prev:
 let
@@ -87,6 +94,14 @@ let
   # non-Nix Cargo consumer of a git-patched dependency would have anyway.
   greeterOldVersion = base.cosmic-greeter.version or "1.7.0";
   greeterVersion = "${greeterOldVersion}-vulkan";
+
+  # cosmic-settings needed no changes to how it's fetched/patched - unlike cosmic-comp, it has
+  # no local path dependency to bundle; unlike cosmic-greeter, it has no git-patched dependency
+  # on this project's other forks at all. It's just the "wayland" Cargo feature (off by default
+  # in upstream nixpkgs' build, see cargoBuildFeatures below) that needs enabling so the new
+  # night-light code (a wlr-gamma-control-unstable-v1 client) is actually compiled in.
+  settingsOldVersion = base.cosmic-settings.version or "1.7.0";
+  settingsVersion = "${settingsOldVersion}-vulkan";
 in
 epoch170
 // {
@@ -139,5 +154,24 @@ epoch170
     env = (old.env or { }) // {
       VERGEN_GIT_SHA = greeterVersion;
     };
+  });
+
+  cosmic-settings = base.cosmic-settings.overrideAttrs (old: {
+    src = cosmic-settings;
+    version = settingsVersion;
+    cargoHash = settingsCargoHash;
+    cargoDeps = prev.rustPlatform.fetchCargoVendor {
+      src = cosmic-settings;
+      version = settingsVersion;
+      inherit (old) pname;
+      hash = settingsCargoHash;
+    };
+    # See the cosmic-comp override above for why checkFeatures/cargoCheckFeatures need setting
+    # alongside buildFeatures/cargoBuildFeatures, not just the latter - same nixpkgs generic
+    # rust builder behavior applies here too.
+    buildFeatures = (old.buildFeatures or [ ]) ++ [ "wayland" ];
+    cargoBuildFeatures = (old.cargoBuildFeatures or [ ]) ++ [ "wayland" ];
+    checkFeatures = (old.checkFeatures or [ ]) ++ [ "wayland" ];
+    cargoCheckFeatures = (old.cargoCheckFeatures or [ ]) ++ [ "wayland" ];
   });
 }

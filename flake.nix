@@ -1,5 +1,5 @@
 {
-  description = "NixOS overlay: COSMIC compositor + greeter with VulkanRenderer smithay (e3d461a pin). Bring-up toggle, not default GLES. Tracks smithay, cosmic-comp, and cosmic-greeter as the three individual project checkouts this effort spans.";
+  description = "NixOS overlay: COSMIC compositor + greeter + settings with VulkanRenderer smithay (e3d461a pin). Bring-up toggle, not default GLES. Tracks smithay, cosmic-comp, cosmic-greeter, and cosmic-settings as the four individual project checkouts this effort spans.";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -9,6 +9,8 @@
     cosmic-comp.flake = false;
     cosmic-greeter.url = "github:Pheoxy/cosmic-greeter/output-identity-edid-serial";
     cosmic-greeter.flake = false;
+    cosmic-settings.url = "github:Pheoxy/cosmic-settings/night-light-vulkan";
+    cosmic-settings.flake = false;
   };
 
   outputs =
@@ -18,6 +20,7 @@
       smithay,
       cosmic-comp,
       cosmic-greeter,
+      cosmic-settings,
     }:
     let
       systems = [
@@ -26,7 +29,7 @@
       ];
       forAllSystems = nixpkgs.lib.genAttrs systems;
       mkOverlay = import ./nix/overlay.nix {
-        inherit cosmic-comp smithay cosmic-greeter;
+        inherit cosmic-comp smithay cosmic-greeter cosmic-settings;
       };
     in
     {
