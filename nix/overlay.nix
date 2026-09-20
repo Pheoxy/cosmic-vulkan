@@ -8,14 +8,15 @@
 # support). Tracking all four here, not just cosmic-comp/smithay, because
 # each of the others depends on or drives something cosmic-comp changed.
 #
-# Also applies cosmic-epoch-1_7_0.nix as a base layer before the Vulkan
-# overrides, so the rest of the COSMIC desktop (cosmic-panel, cosmic-session,
-# xdg-desktop-portal-cosmic, ...) is on the same epoch-1.7.0 release these
-# branches were developed against, instead of leaving them on whatever older
+# Also applies cosmic-epoch.nix as a base layer before the Vulkan overrides,
+# so the rest of the COSMIC desktop (cosmic-panel, cosmic-session,
+# xdg-desktop-portal-cosmic, ...) is on the same epoch release these branches
+# were developed against (see `epoch` in that file), instead of whatever
 # version nixpkgs ships by default - a mismatched desktop is a real way for
-# this to "not work as well" for anyone who applies only this overlay. Use
-# `overlays.cosmic-epoch-1_7_0` directly instead if you want that bump without
-# the Vulkan renderer.
+# this to "not work as well" for anyone who applies only this overlay. That
+# layer is kept in sync with the release this project targets whether or not
+# nixpkgs is aligned with it. Use `overlays.cosmic-epoch` directly instead if
+# you want the alignment without the Vulkan renderer.
 #
 # Exclusive KMS Vulkan, not default COSMIC GLES. Do not mix with GLES
 # hybrid-export smithay patches.
@@ -43,15 +44,15 @@
 }:
 final: prev:
 let
-  # Bump the whole COSMIC desktop to epoch-1.7.0 first (see
-  # cosmic-epoch-1_7_0.nix for why), then layer the Vulkan-specific
+  # Align the whole COSMIC desktop to the targeted epoch release first (see
+  # cosmic-epoch.nix for why), then layer the Vulkan-specific
   # cosmic-comp/cosmic-greeter overrides on top of *that* base rather than
   # on top of whatever version nixpkgs ships by default - so the resulting
-  # `-vulkan` version string chains from "1.7.0", not whatever older version
+  # `-vulkan` version string chains from that release, not whatever version
   # nixpkgs happens to have. `base` is everything this overlay returns
   # except the three packages Vulkan overrides again below.
-  epoch170 = import ./cosmic-epoch-1_7_0.nix final prev;
-  base = prev // epoch170;
+  epochLayer = import ./cosmic-epoch.nix final prev;
+  base = prev // epochLayer;
 
   compSrc = prev.runCommand "cosmic-comp-vulkan-src" { } ''
     cp -a ${cosmic-comp}/. "$out"
@@ -64,7 +65,7 @@ let
       --replace-fail 'smithay = { path = "../smithay" }' \
                      'smithay = { path = "./smithay" }'
   '';
-  compOldVersion = base.cosmic-comp.version or "1.7.0";
+  compOldVersion = base.cosmic-comp.version or "1.8.0";
   compVersion = "${compOldVersion}-vulkan";
 
   # cosmic-greeter's own Cargo.toml already patches cosmic-comp-config to a
@@ -79,7 +80,7 @@ let
   # needs a manual bump (in cosmic-greeter's own Cargo.toml) if `cosmic-comp`'s
   # branch moves - the same maintenance a non-Nix Cargo consumer of a
   # git-patched dependency would have anyway.
-  greeterOldVersion = base.cosmic-greeter.version or "1.7.0";
+  greeterOldVersion = base.cosmic-greeter.version or "1.8.0";
   greeterVersion = "${greeterOldVersion}-vulkan";
 
   # cosmic-settings needed no changes to how it's fetched/patched - unlike cosmic-comp, it has
@@ -87,10 +88,10 @@ let
   # on this project's other forks at all. It's just the "wayland" Cargo feature (off by default
   # in upstream nixpkgs' build) that needs enabling so the new night-light code (a
   # wlr-gamma-control-unstable-v1 client) is actually compiled in.
-  settingsOldVersion = base.cosmic-settings.version or "1.7.0";
+  settingsOldVersion = base.cosmic-settings.version or "1.8.0";
   settingsVersion = "${settingsOldVersion}-vulkan";
 in
-epoch170
+epochLayer
 // {
   cosmic-comp = import ./cosmic-comp-crane.nix {
     pkgs = prev;

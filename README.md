@@ -2,7 +2,7 @@
 
 A NixOS overlay/module that replaces the stock COSMIC compositor and greeter
 with builds from an in-progress Vulkan renderer for `cosmic-comp`, on top of
-a consistent COSMIC epoch-1.7.0 desktop. This is a bring-up/tracking project,
+a consistent COSMIC epoch release desktop (currently epoch-1.8.0). This is a bring-up/tracking project,
 not an official COSMIC release - default COSMIC installs should keep using
 GLES.
 
@@ -20,7 +20,7 @@ Four individual project forks, each carrying the changes this effort needs:
 `cosmic-comp`, `cosmic-greeter`, and `cosmic-settings` are Vulkan-patched by
 this overlay. Everything else in the COSMIC desktop (`cosmic-panel`,
 `cosmic-session`, `xdg-desktop-portal-cosmic`, ...) is left as whatever
-epoch-1.7.0 build this overlay's `cosmic-epoch-1_7_0.nix` bump provides - see
+build of the targeted epoch release this overlay's `cosmic-epoch.nix` layer provides - see
 below for why that matters.
 
 Why `cosmic-greeter` is tracked here at all, not just `cosmic-comp`+`smithay`:
@@ -77,17 +77,19 @@ hash-mismatch trick to recover from). `overlays.cosmic-vulkan` and
 nixpkgs.overlays = [ inputs.cosmic-vulkan.overlays.cosmic-vulkan ];
 ```
 
-### Epoch-1.7.0 without Vulkan
+### The epoch release alignment without Vulkan
 
-If you want the epoch-1.7.0 desktop bump on its own, without the Vulkan
+If you want the COSMIC release alignment on its own, without the Vulkan
 renderer at all:
 
 ```nix
-nixpkgs.overlays = [ inputs.cosmic-vulkan.overlays.cosmic-epoch-1_7_0 ];
+nixpkgs.overlays = [ inputs.cosmic-vulkan.overlays.cosmic-epoch ];
 ```
 
-This exists because nixpkgs' own `cosmic-*` packages generally lag the actual
-pop-os epoch release by one or more versions - `overlays.cosmic-vulkan`/
+This layer pins every COSMIC package to the epoch release this project is
+currently developed against (`epoch` in `nix/cosmic-epoch.nix`), and is kept
+in sync with that release whether nixpkgs is behind, ahead, or aligned (when
+aligned it is a no-op) - `overlays.cosmic-vulkan`/
 `default` already apply this overlay as a base layer for you, so you don't
 need to add both together.
 

@@ -1,44 +1,40 @@
-# COSMIC 1.7.0: override official nixpkgs packages to pop-os epoch-1.7.0.
+# COSMIC release alignment layer: pin every COSMIC desktop package to the
+# pop-os epoch release this project is currently developed against.
 #
-# Ported from a working host config (originally
-# `~/Projects/nixos/overlays/cosmic-desktop.nix`) - nixpkgs' own `cosmic-*`
-# packages generally lag the actual pop-os epoch release by one or more
-# versions. Without this, `overlay.nix`'s Vulkan-patched `cosmic-comp`/
-# `cosmic-greeter` end up sitting next to a stack of *other* COSMIC packages
-# (`cosmic-panel`, `cosmic-session`, `cosmic-settings-daemon`,
-# `xdg-desktop-portal-cosmic`, ...) that are one or more epochs behind - a
-# mismatched desktop that can hit protocol/feature skew between components
-# that are all supposed to be the same release. `overlay.nix` applies this
-# overlay itself before layering its own `cosmic-comp`/`cosmic-greeter`
-# overrides on top, so anyone using `overlays.cosmic-vulkan`/`overlays.default`
-# gets a consistent 1.7.0-based desktop, not just a patched compositor alone.
+# This layer is a permanent part of the overlay, not a stop-gap. nixpkgs'
+# own `cosmic-*` packages sometimes lag the pop-os epoch release by one or
+# more versions, and sometimes run ahead of it. Either way our Vulkan-patched
+# `cosmic-comp`/`cosmic-greeter`/`cosmic-settings` (built from branches based
+# on a specific epoch tag) would otherwise sit next to a stack of *other*
+# COSMIC packages (`cosmic-panel`, `cosmic-session`, `cosmic-settings-daemon`,
+# `xdg-desktop-portal-cosmic`, ...) from a different release - a mismatched
+# desktop that can hit protocol/feature skew between components that are all
+# supposed to be the same release. So: `epoch` below is bumped together with
+# the fork branches whenever this project moves to a new release, and this
+# file is kept in sync with that release regardless of what nixpkgs ships.
+# When nixpkgs happens to be on the same release it is a no-op (same tags,
+# same hashes - the values below are taken straight from nixpkgs' package
+# files when it is aligned, and derived by hand when it is not).
 #
-# This file is also exposed standalone (`overlays.cosmic-epoch-1_7_0`) for
-# anyone who wants the epoch-1.7.0 bump on its own, independent of the
-# Vulkan renderer work - it is a complete, working overlay by itself.
-#
-# Drop this overlay once nixpkgs PR #556651 lands (and pop-launcher follows).
+# Also exposed standalone (`overlays.cosmic-epoch`) for anyone who wants the
+# release alignment on its own, independent of the Vulkan renderer work.
 #
 # vs pop-os/cosmic-epoch:
-# - Most apps generate .desktop/.metainfo via xdgen in cargo build.rs; nixpkgs
-#   cargo build already runs that. cosmic-app-library and cosmic-launcher at
-#   1.7.0 still use scripts/xdgen (master has since moved those to build.rs).
-# - pop-launcher is in the epoch set and the NixOS module, but nixpkgs is still
-#   on crate tag 1.2.7; bump it to epoch-1.7.0 here (adds cosmic_toplevel, etc.).
+# - .desktop/.metainfo generation moved into each app's build.rs by 1.8.0
+#   (`scripts/xdgen` no longer exists); nixpkgs' cargo build runs it.
+# - pop-launcher is in the epoch set and the NixOS module, but nixpkgs tracks
+#   its crate tag (1.2.7); pin it to the epoch tag here.
 # - cosmic-osk is packaged in Pop!_OS but not tagged in epoch yet; ship it as a
 #   package only (not wired into any desktop module by this file).
 # Skip: cosmic-theme-editor (archived), simple-wrapper (not installed upstream).
 #
-# cargoHash/src values below are pinned to specific epoch-1.7.0 source
-# revisions; re-derive via the usual hash-mismatch bootstrap trick
-# (`nix build` with a placeholder hash, read the "got:" value) if nixpkgs'
-# own package definitions for any of these drift enough to change what gets
-# vendored.
+# Hash bootstrap when nixpkgs is *not* aligned: `nix build` with a placeholder
+# hash and read the "got:" value from the mismatch error.
 
 final: prev:
 let
   inherit (prev) lib rustPlatform;
-  epoch = "1.7.0";
+  epoch = "1.8.0";
 
   xdgen =
     src: cargoHash:
@@ -91,77 +87,72 @@ let
 
   specs = {
     cosmic-app-library = {
-      src = "sha256-g77/wMG0e8yMYLnwfOTupJlBOKKGYpsbRNxkjCsCfvY=";
-      cargoHash = "sha256-pr90LG3H8hKD1dJAeO4vfLQLlihB7gjwvhlDNHdRTec=";
-      xdgenCargoHash = "sha256-u3ia4MOL1cNj3K5ofJ5piwEDsDna2ImZh9uSVRPIQ/o=";
-      xdgenAppId = "com.system76.CosmicAppLibrary";
-      xdgenAppName = "cosmic-app-library";
+      src = "sha256-oAGo8ByFHiSR9J57Ytn9kjMRwu103Retr9VcZjjaTtY=";
+      cargoHash = "sha256-UNSoRkHFQ1VpIeF/xMyONpwZ8hG5yUkTWqq/9LQ1wqs=";
     };
     cosmic-applets = {
-      src = "sha256-DPqumlRrY666kR8/PewUKs4Bsb70H59vmFtnWX6Q95g=";
-      cargoHash = "sha256-xgpsIynrVcN62IQ++ABZqqbP0ak86eQYTc1SCSxy2l4=";
+      src = "sha256-OMz/lh5bJ7YjS6GLP+yQsJ9HvYNDedj2MMMA5pgwPEE=";
+      cargoHash = "sha256-iGnqu6Di2kxEAujzJ+Yy+A4cUZrdDjQ7aF3yrVz+QYU=";
     };
     cosmic-bg = {
       src = "sha256-tvYVe3H99oB6NYzLjwzX+ccSFh54LAfvuLmFoCIaJp4=";
       cargoHash = "sha256-j07BZ9JsY6UG9eXVxdn0CTWU8j/cGNA9lXrDsdF40lM=";
     };
     cosmic-comp = {
-      src = "sha256-ZzEP2vErksBjohshiLpS3cMLsiwumIO8Ncg5UWt2nZ0=";
-      cargoHash = "sha256-g5DCr8x8UQik8dSg+799lRDBeQQ47XvI7EbanR1de2k=";
+      src = "sha256-axWy7F05WOt03WX4nYdObclFf3E12C4zxQ2eNLOjPp0=";
+      cargoHash = "sha256-J9/7DVMyx4SV/BKhg4l9B4haRdGfspmoZjr8LPTzmgo=";
     };
     cosmic-edit = {
-      src = "sha256-gkU7oIWCOP7c/fIJPhLMyken0C5FqgGsayO4SOplMvI=";
-      cargoHash = "sha256-qS5/jTh9tFprkBolXvjTuU6MOa0hxHiUTZ8JCeQli9g=";
+      src = "sha256-mZnL9W67hnHVS4wJBAprdPzU8VEq6mguzuhXjtPPIhc=";
+      cargoHash = "sha256-NERnN9TqqpzI9kD2ujfs11W0RnVxU+Ra6GjGk3FGO3A=";
     };
     cosmic-files = {
-      src = "sha256-fuzsSlU1ZnneCXE6gx/0G4d6p4UEjorInTHg16QP0y0=";
-      cargoHash = "sha256-QyRzX0aH6u6h0HM8kRrCY60btgSDGvQ8e7ZcENf+WFI=";
+      src = "sha256-AHb+DIoQ4LKE//QSFKxTbmmse1D9C6VYQ0vhiqnbFaY=";
+      cargoHash = "sha256-wO4tci+Ocd9sIwp2lQN7RNKc+XeqvlSJGdViQ+lVt4Q=";
     };
     cosmic-greeter = {
-      src = "sha256-Yi+MrPo8VMxghblAhIWbXli3wGtklzoyI8GbaaZO6Qo=";
+      src = "sha256-mC8m6hbQ6VgJoFl7VFRkbKl4zev8pffKHRtzvXtwoRo=";
       cargoHash = "sha256-vHR9go8/iVUT7oBV8h+mmBvhi2oSKNBKtV0uoDOr6go=";
     };
     cosmic-icons = {
-      src = "sha256-QUTAYIQ6qAhjZK/9BZjJzTViECLUwO/MyaOqiRb1Ans=";
+      src = "sha256-IlWVDJZBDn0RZaWpMx+mVJrcn5eqz2i6qDIjvQjkTZ4=";
     };
     cosmic-idle = {
       src = "sha256-0tcrOfVT5b57ev3b5F2U78F2QPGFwp94bqFVNyKH0Yk=";
       cargoHash = "sha256-wAjFC6qAC3nllbnZf0KVaZTEztNYo6GTvwcp5FYmXLw=";
     };
     cosmic-initial-setup = {
-      src = "sha256-P/F7hPKY9M3GoMmNi+lgmA5+lv5swcUA+B8FdyRSjPo=";
+      src = "sha256-Qv95Q528TN/UafVS3C6yZqvbu/EDT+/Gj0Od50ZvIVs=";
       cargoHash = "sha256-pQmWdt53G/JJN37jTkGBYb1lfOT6aiwwNXKZGA9Es7w=";
     };
     cosmic-launcher = {
-      src = "sha256-zlqFX2DNQu5LqxbBcPK22H8N076k2JwmhNaVcnZbk1I=";
-      cargoHash = "sha256-rD3zgkf13cc2YgDWcKxs3MDH4aORVz+dsxpm5tqrszU=";
-      xdgenCargoHash = "sha256-Zf41g3ZpY0McDGhvmKReV77p4/laHUIBNievOMGbToE=";
-      xdgenAppId = "com.system76.CosmicLauncher";
-      xdgenAppName = "cosmic-launcher";
+      src = "sha256-qfBP5EzI7+oVYt5MdY+WypG5SvsFvk46F78q/cwIpWo=";
+      cargoHash = "sha256-NwIcWFnN6ulNq0RVMYLlYfHGbMTgd71mbqzAAP5ZCKc=";
     };
     cosmic-monitor = {
-      src = "sha256-axg/T3x2NMoGjVMrR381eoCNegUYr8vUpz0gIIYN7fY=";
-      cargoHash = "sha256-4LYcW9wQXxrWlxc8VYeYTX29Rbu7pkXtb/BbsHludcQ=";
+      src = "sha256-nItwje+QZkR0L+wOsmOVPJwo4THwiRLLvIFvH6XP31o=";
+      cargoHash = "sha256-HHKIXKyS1zDkNGbsEWiKghPqIsPKRUJtjxKuNfI6mak=";
     };
     cosmic-notifications = {
       src = "sha256-HhhmsAngWseqXOPy5ra2BIakiBD9YskE2IsjqXaMVGs=";
       cargoHash = "sha256-32AoA17CO4noUzKhx+KDBpy5fWG4lvSBMK5aVJW8K9o=";
     };
     cosmic-osd = {
-      src = "sha256-cVTR13WydvpPdtz+ewZ9nWjMfwHA/j3enm0L7r3+kog=";
-      cargoHash = "sha256-5hput7WMstON8YG9GNNU61T+bQevGV72mAHYMtJJXng=";
+      src = "sha256-bb1NKMRl8gyQ8PRniS4eIrmjkZ2ayyMi2AkzejXV+3Y=";
+      cargoHash = "sha256-C0GR/VWWu2zOAvAokQnM+g+OJqQM2s2WUf2ffwfZieI=";
     };
     cosmic-panel = {
-      src = "sha256-dx+k+A5ZXo9MXuUxjdEd4xEqscuaNdVoojQzCWUNy/g=";
+      src = "sha256-Cl4F9vf39qLT/ZVCP9dUJ6YTQq47Wl8tbjbu1b+6tgY=";
       cargoHash = "sha256-XIthlStPM97vjhJTdofUOkOudH1id6W2U4YdOxEh/eo=";
     };
     pop-launcher = {
+      # epoch-1.8.0 and epoch-1.7.0 tag the same tree (identical source hash).
       src = "sha256-OfUpbpAhUGUFunucRgbD+UXF40sl6PgpmJzUjbfn1Z8=";
       cargoHash = "sha256-k57ondlF1xu5/GU9QzKkT5F2caFNNPC6/Bj2HWwzzGI=";
     };
     cosmic-player = {
-      src = "sha256-8XKgUpSrbzQS/E41aujxw2kz0reYQh+yeOP2k37ACA4=";
-      cargoHash = "sha256-SVCwoQuIHHrd2FBoWJeXIhYev//bVcl9XtGm6QzOVK4=";
+      src = "sha256-6AbCB1d4g9iy77HRXxEs0KT/7Ry6/quJs3Qumw5jTKI=";
+      cargoHash = "sha256-9ReitIbvr6D+BGLa1xumi67DPG3YlgdA4pZ/rfvn4Cc=";
     };
     cosmic-randr = {
       src = "sha256-Jimw6YCRouG9FDlLBp15OOCRlywBIaP/K/bXLR7trQM=";
@@ -182,33 +173,33 @@ let
       cargoHash = "sha256-5dLG40X+yxJo566guyHqOCLNp+uNSE+HONS8GIDm58A=";
     };
     cosmic-settings = {
-      src = "sha256-cxCLyLISM20UdxF0cdn7UAEa9uDihy71OS/357cbayI=";
-      cargoHash = "sha256-2CKyNmtGUF0qzNjSR06lBqtC4DVtxZ5dAqLhEzjWCR4=";
+      src = "sha256-53DJw3oSVGsgpy/BNnxOT60J7kRB0kp18qrjP2IR4gI=";
+      cargoHash = "sha256-NT4y838qjvdOuFLqAk6I2c5cHbmhMs3JrGoIIhw4+FE=";
     };
     cosmic-settings-daemon = {
-      src = "sha256-bs5wP53jswti8l28fIJu5PG3mKuM1IJqeIef3LhMarA=";
+      src = "sha256-D7f5IERgNP9JrmAIiHp6jlBZUOt+n8FpEiGx1jqqwgs=";
       cargoHash = "sha256-4rGgRc7EDdxGvFmAUY4kJ9aO/Pas9S2Q+b5ArZNydvs=";
     };
     cosmic-sound-theme = {
       sha256 = "sha256-hFWTn73SutdOZGbhkcsBR1TNabB+IOrxRndwXaikqN8=";
     };
     cosmic-store = {
-      src = "sha256-ME5Mgzpc3fCxI3UR6ifSsnjMvMD0C325v/MvNiYKjFw=";
-      cargoHash = "sha256-g4MenwLRy7fd1puyUL3XeESpj4JvWObTsc9tFaWUXGQ=";
+      src = "sha256-z2w+FYNGsvRzCRp5EQ1QwrITHso2HhCAVz19M50Tk48=";
+      cargoHash = "sha256-MxLb1ur7IwVAfAxViXXaFoVN35vhuIF1S1HRvg3wPo4=";
     };
     cosmic-term = {
-      src = "sha256-IXtzZMzy5/wC/9k3dRuntF5YKNMaAVFRrDuG2qP3rpc=";
-      cargoHash = "sha256-mXZuEHOh3YI5slbkY24FHwyIR2zGTYykeyDHBvc0IJs=";
+      src = "sha256-eXy7gSjcBu3kALJEbHp7BgKg9H7FIgrKfGWgiad7Z1M=";
+      cargoHash = "sha256-NN3kX0/ea7Q+QcWO8eAchsSaIVuudbf5dbCRiRZdnBg=";
     };
     cosmic-wallpapers = {
       src = "sha256-lCgWRtvaso9jKo7A4VepDFK/zc8pQpR1up8yoWS/qfc=";
     };
     cosmic-workspaces-epoch = {
-      src = "sha256-yOGeAuJU8/9IljQPy3wEuzD/hFHwIn+Rm0OWDeTeOHE=";
+      src = "sha256-ntn1mW6YKpSXNZQbkZRFhUHbZur3JtJD9A/MzI+AUMQ=";
       cargoHash = "sha256-0ZvnMT7wkMyZ9zHOBGZNh+DmLaoATHvpSplSnVgC/j4=";
     };
     xdg-desktop-portal-cosmic = {
-      src = "sha256-2+ni2lWa2d/A5nN7iKNFwE3IQwO4hl9JX385rzXKrA4=";
+      src = "sha256-UbWQSdC1GhizgFn9KMxJDT8rV8IaZ4hwDA0hQ14qc7o=";
       cargoHash = "sha256-cENH+9M4irNfsSioeP3yX38Ux1ESO0KXtaiiK3XuEtA=";
     };
   };
