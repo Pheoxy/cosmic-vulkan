@@ -59,28 +59,23 @@ specialisation.cosmic-vulkan.configuration = {
 Pick the resulting boot entry to try the Vulkan renderer; reboot into the
 untagged generation to go back to GLES.
 
-### Overriding `cargoHash`
+### Build tooling
 
-`overlays.cosmic-vulkan` (unlike `overlays.default`, which is this called
-with no arguments) is a function that takes the cargo vendor hashes, in
-case the tracked branches move and the hashes baked into `nix/overlay.nix`
-go stale:
+`cosmic-comp`, `cosmic-greeter`, and `cosmic-settings` are all built via
+[crane](https://github.com/ipetkov/crane) rather than
+`rustPlatform.buildRustPackage`, splitting each build into a deps-only
+derivation (cached across edits to that package's own source, as long as its
+`Cargo.lock` is unchanged) and the real crate build. This also means there's
+no `cargoHash`/`greeterCargoHash`/`settingsCargoHash` to maintain - crane
+vendors dependencies straight from each package's own `Cargo.lock`, with no
+separate fixed-output-derivation hash to re-derive by hand whenever a
+`Cargo.lock` changes (the old failure mode this project used to need the
+hash-mismatch trick to recover from). `overlays.cosmic-vulkan` and
+`overlays.default` are now equivalent - just:
 
 ```nix
-nixpkgs.overlays = [
-  (inputs.cosmic-vulkan.overlays.cosmic-vulkan {
-    cargoHash = "sha256-...";          # cosmic-comp
-    greeterCargoHash = "sha256-...";   # cosmic-greeter
-    settingsCargoHash = "sha256-...";  # cosmic-settings
-  })
-];
+nixpkgs.overlays = [ inputs.cosmic-vulkan.overlays.cosmic-vulkan ];
 ```
-
-Get the real hash by building with a placeholder
-(`sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=`) and reading the
-"got:" value from the resulting hash-mismatch error - `nix build` will refuse
-to build but tells you the real hash directly. No need to guess or run a
-separate `nix-prefetch`-style tool.
 
 ### Epoch-1.7.0 without Vulkan
 

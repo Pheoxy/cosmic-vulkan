@@ -11,6 +11,10 @@
     cosmic-greeter.flake = false;
     cosmic-settings.url = "github:Pheoxy/cosmic-settings/night-light-vulkan";
     cosmic-settings.flake = false;
+    # Builds cosmic-comp/cosmic-greeter/cosmic-settings with dependency
+    # compilation cached separately from each package's own source - see
+    # nix/overlay.nix.
+    crane.url = "github:ipetkov/crane";
   };
 
   outputs =
@@ -21,6 +25,7 @@
       cosmic-comp,
       cosmic-greeter,
       cosmic-settings,
+      crane,
     }:
     let
       systems = [
@@ -29,12 +34,12 @@
       ];
       forAllSystems = nixpkgs.lib.genAttrs systems;
       mkOverlay = import ./nix/overlay.nix {
-        inherit cosmic-comp smithay cosmic-greeter cosmic-settings;
+        inherit cosmic-comp smithay cosmic-greeter cosmic-settings crane;
       };
     in
     {
       overlays.cosmic-vulkan = mkOverlay;
-      overlays.default = mkOverlay { };
+      overlays.default = mkOverlay;
       # The epoch-1.7.0 desktop bump on its own, independent of the Vulkan
       # renderer work - overlays.cosmic-vulkan/default already apply this as
       # a base layer, so use this directly only if you want the bump without

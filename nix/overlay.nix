@@ -18,50 +18,38 @@
 # the Vulkan renderer.
 #
 # Exclusive KMS Vulkan, not default COSMIC GLES. Do not mix with GLES
-# hybrid-export smithay patches. Each cargoHash changes whenever its
-# corresponding source tree changes; override the relevant one if
-# fetchCargoVendor fails:
+# hybrid-export smithay patches.
 #
-#   nixpkgs.overlays = [
-#     (inputs.cosmic-vulkan.overlays.cosmic-vulkan {
-#       cargoHash = "sha256-...";          # cosmic-comp
-#       greeterCargoHash = "sha256-...";   # cosmic-greeter
-#       settingsCargoHash = "sha256-...";  # cosmic-settings
-#     })
-#   ];
+# All three forked packages are built via crane (see cosmic-comp-crane.nix,
+# cosmic-greeter-crane.nix, cosmic-settings-crane.nix), not
+# `rustPlatform.buildRustPackage` - dependency compilation is cached
+# separately from each package's own source, so tracking a new commit on any
+# of the four branches this overlay pulls in only recompiles what actually
+# changed instead of the whole dependency tree every time. This also means
+# there's no `cargoHash`/`greeterCargoHash`/`settingsCargoHash` to maintain
+# any more - crane vendors straight from each package's own Cargo.lock, with
+# no separate fixed-output-derivation hash to re-derive by hand whenever a
+# Cargo.lock changes (the old failure mode this overlay used to need the
+# hash-mismatch trick to recover from). Usage is now just:
+#
+#   nixpkgs.overlays = [ inputs.cosmic-vulkan.overlays.cosmic-vulkan ];
 #
 {
   cosmic-comp,
   smithay,
   cosmic-greeter,
   cosmic-settings,
-}:
-{
-  # cargoHash was computed against cosmic-comp rev aa3a3200 and should still
-  # be valid (that rev's own Cargo.lock is unchanged from the value this was
-  # derived against). greeterCargoHash was derived against cosmic-greeter rev
-  # 7e76893, but cosmic-greeter's Cargo.lock has since changed (its
-  # cosmic-comp-config patch now points at aa3a3200 too), so this value is
-  # stale and needs re-deriving. Both: re-derive via the documented
-  # hash-mismatch trick (build .cargoDeps with a placeholder hash and read
-  # the "got:" value) whenever either input's Cargo.lock changes.
-  cargoHash ? "sha256-SrcH1IRNvXBdMkddlds8IVlaSgvdn9jGv1XaEHzUtLE=",
-  greeterCargoHash ? "sha256-N6fsXQb5nSsujWH0dTLvXs358bUe5vJFzZQJu0zuxSg=",
-  # Never built yet - genuine placeholder, not derived against anything. The first real build
-  # attempt will fail with a hash mismatch naming the correct value; put that here once known.
-  settingsCargoHash ? "sha256-0000000000000000000000000000000000000000000=",
+  crane,
 }:
 final: prev:
 let
   # Bump the whole COSMIC desktop to epoch-1.7.0 first (see
   # cosmic-epoch-1_7_0.nix for why), then layer the Vulkan-specific
   # cosmic-comp/cosmic-greeter overrides on top of *that* base rather than
-  # on top of whatever version nixpkgs ships by default - so `old.pname`/
-  # `old.buildInputs`/etc reflect the correct epoch-1.7.0 package shape, and
-  # the resulting `-vulkan` version string chains from "1.7.0", not
-  # whatever older version nixpkgs happens to have. `base` is everything
-  # this overlay returns except the two packages Vulkan overrides again
-  # below.
+  # on top of whatever version nixpkgs ships by default - so the resulting
+  # `-vulkan` version string chains from "1.7.0", not whatever older version
+  # nixpkgs happens to have. `base` is everything this overlay returns
+  # except the three packages Vulkan overrides again below.
   epoch170 = import ./cosmic-epoch-1_7_0.nix final prev;
   base = prev // epoch170;
 
@@ -78,100 +66,50 @@ let
   '';
   compOldVersion = base.cosmic-comp.version or "1.7.0";
   compVersion = "${compOldVersion}-vulkan";
-  libdisplayInfo = prev.libdisplay-info_0_3 or prev.libdisplay-info;
 
   # cosmic-greeter's own Cargo.toml already patches cosmic-comp-config to a
   # specific pinned rev on Pheoxy/cosmic-comp (not upstream pop-os/cosmic-comp,
   # which lacks the EDID-serial output-identity fix) - see cosmic-greeter's
   # `[patch."https://github.com/pop-os/cosmic-comp"]`. Cargo's own git
-  # vendoring (via fetchCargoVendor below) resolves that during the build the
-  # same way it already resolves every other git dependency, so - unlike
-  # cosmic-comp's smithay path dependency above - no source bundling or
-  # substitution is needed here; `cosmic-greeter` (the flake input) is used
-  # directly as `src`. This does mean cosmic-greeter's pinned rev tracks
-  # `cosmic-comp` independently and needs a manual bump (in cosmic-greeter's
-  # own Cargo.toml) if `cosmic-comp`'s branch moves - the same maintenance a
-  # non-Nix Cargo consumer of a git-patched dependency would have anyway.
+  # vendoring resolves that during the build the same way it resolves every
+  # other git dependency, so - unlike cosmic-comp's smithay path dependency
+  # above - no source bundling or substitution is needed here;
+  # `cosmic-greeter` (the flake input) is used directly as `src`. This does
+  # mean cosmic-greeter's pinned rev tracks `cosmic-comp` independently and
+  # needs a manual bump (in cosmic-greeter's own Cargo.toml) if `cosmic-comp`'s
+  # branch moves - the same maintenance a non-Nix Cargo consumer of a
+  # git-patched dependency would have anyway.
   greeterOldVersion = base.cosmic-greeter.version or "1.7.0";
   greeterVersion = "${greeterOldVersion}-vulkan";
 
   # cosmic-settings needed no changes to how it's fetched/patched - unlike cosmic-comp, it has
   # no local path dependency to bundle; unlike cosmic-greeter, it has no git-patched dependency
   # on this project's other forks at all. It's just the "wayland" Cargo feature (off by default
-  # in upstream nixpkgs' build, see cargoBuildFeatures below) that needs enabling so the new
-  # night-light code (a wlr-gamma-control-unstable-v1 client) is actually compiled in.
+  # in upstream nixpkgs' build) that needs enabling so the new night-light code (a
+  # wlr-gamma-control-unstable-v1 client) is actually compiled in.
   settingsOldVersion = base.cosmic-settings.version or "1.7.0";
   settingsVersion = "${settingsOldVersion}-vulkan";
 in
 epoch170
 // {
-  cosmic-comp = base.cosmic-comp.overrideAttrs (old: {
+  cosmic-comp = import ./cosmic-comp-crane.nix {
+    pkgs = prev;
+    inherit crane;
     src = compSrc;
     version = compVersion;
-    cargoHash = cargoHash;
-    cargoDeps = prev.rustPlatform.fetchCargoVendor {
-      src = compSrc;
-      version = compVersion;
-      inherit (old) pname;
-      hash = cargoHash;
-    };
-    # `checkFeatures`/`cargoCheckFeatures` are NOT re-derived from
-    # `buildFeatures`/`cargoBuildFeatures` on override: nixpkgs' rust generic
-    # builder computes `cargoCheckFeatures = checkFeatures ? buildFeatures`
-    # once, when `rustPlatform.buildRustPackage {...}` is originally
-    # evaluated inside package.nix - before this overlay's `overrideAttrs`
-    # ever runs. Since stock cosmic-comp never sets `buildFeatures`, that
-    # already-baked `cargoCheckFeatures` stays `[]` even after this override
-    # adds `renderer_vulkan` to `buildFeatures`/`cargoBuildFeatures` below -
-    # without setting these too, `cargoCheckHook` (cosmic-comp's `cargo
-    # test`/check phase, separate from the actual `cargoBuildHook` compile)
-    # silently runs with no `renderer_vulkan`, hits pre-existing
-    # zoom-postprocessing bit-rot that's cfg'd out under that feature, and
-    # fails the whole build even though the real compiled binary (from
-    # cargoBuildHook, which *does* get the right features) is fine.
-    buildFeatures = (old.buildFeatures or [ ]) ++ [ "renderer_vulkan" ];
-    cargoBuildFeatures = (old.cargoBuildFeatures or [ ]) ++ [ "renderer_vulkan" ];
-    checkFeatures = (old.checkFeatures or [ ]) ++ [ "renderer_vulkan" ];
-    cargoCheckFeatures = (old.cargoCheckFeatures or [ ]) ++ [ "renderer_vulkan" ];
-    buildInputs =
-      (builtins.filter (p: (p.pname or "") != "libdisplay-info") (old.buildInputs or [ ]))
-      ++ [
-        prev.vulkan-loader
-        libdisplayInfo
-      ];
-  });
+  };
 
-  cosmic-greeter = base.cosmic-greeter.overrideAttrs (old: {
+  cosmic-greeter = import ./cosmic-greeter-crane.nix {
+    pkgs = prev;
+    inherit crane;
     src = cosmic-greeter;
     version = greeterVersion;
-    cargoHash = greeterCargoHash;
-    cargoDeps = prev.rustPlatform.fetchCargoVendor {
-      src = cosmic-greeter;
-      version = greeterVersion;
-      inherit (old) pname;
-      hash = greeterCargoHash;
-    };
-    env = (old.env or { }) // {
-      VERGEN_GIT_SHA = greeterVersion;
-    };
-  });
+  };
 
-  cosmic-settings = base.cosmic-settings.overrideAttrs (old: {
+  cosmic-settings = import ./cosmic-settings-crane.nix {
+    pkgs = prev;
+    inherit crane;
     src = cosmic-settings;
     version = settingsVersion;
-    cargoHash = settingsCargoHash;
-    cargoDeps = prev.rustPlatform.fetchCargoVendor {
-      src = cosmic-settings;
-      version = settingsVersion;
-      inherit (old) pname;
-      hash = settingsCargoHash;
-    };
-    # See the cosmic-comp override above for why checkFeatures/cargoCheckFeatures need setting
-    # alongside buildFeatures/cargoBuildFeatures, not just the latter - same nixpkgs generic
-    # rust builder behavior applies here too.
-    buildFeatures = (old.buildFeatures or [ ]) ++ [ "wayland" ];
-    cargoBuildFeatures = (old.cargoBuildFeatures or [ ]) ++ [ "wayland" ];
-    checkFeatures = (old.checkFeatures or [ ]) ++ [ "wayland" ];
-    cargoCheckFeatures = (old.cargoCheckFeatures or [ ]) ++ [ "wayland" ];
-  });
+  };
 }
