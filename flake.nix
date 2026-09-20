@@ -3,13 +3,13 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    smithay.url = "github:Pheoxy/smithay/add-vulkan-renderer-support-cosmic-e3d461a";
+    smithay.url = "github:Pheoxy/smithay/add-vulkan-renderer-support-epoch-1.8.0";
     smithay.flake = false;
-    cosmic-comp.url = "github:Pheoxy/cosmic-comp/vulkan-renderer-e3d461a";
+    cosmic-comp.url = "github:Pheoxy/cosmic-comp/vulkan-renderer-epoch-1.8.0";
     cosmic-comp.flake = false;
-    cosmic-greeter.url = "github:Pheoxy/cosmic-greeter/output-identity-edid-serial";
+    cosmic-greeter.url = "github:Pheoxy/cosmic-greeter/output-identity-epoch-1.8.0";
     cosmic-greeter.flake = false;
-    cosmic-settings.url = "github:Pheoxy/cosmic-settings/night-light-vulkan";
+    cosmic-settings.url = "github:Pheoxy/cosmic-settings/night-light-epoch-1.8.0";
     cosmic-settings.flake = false;
     # Builds cosmic-comp/cosmic-greeter/cosmic-settings with dependency
     # compilation cached separately from each package's own source - see

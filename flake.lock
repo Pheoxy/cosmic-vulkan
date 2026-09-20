@@ -3,16 +3,16 @@
     "cosmic-comp": {
       "flake": false,
       "locked": {
-        "lastModified": 1789868419,
-        "narHash": "sha256-k91Qx98YOUIgvPydjLhMYyYSMz+bH2sEXo9AP2gMUco=",
+        "lastModified": 1789886242,
+        "narHash": "sha256-dFc3rTlgKtvs/T0F1k4TH+PzLZ9Hwk38KUCrD1Rh8mY=",
         "owner": "Pheoxy",
         "repo": "cosmic-comp",
-        "rev": "ff04b1ee85050d26b5df4a8096501a5ac3af96dd",
+        "rev": "d665bb99f074ddbe51228ce218bac17466ab5f03",
         "type": "github"
       },
       "original": {
         "owner": "Pheoxy",
-        "ref": "vulkan-renderer-e3d461a",
+        "ref": "vulkan-renderer-epoch-1.8.0",
         "repo": "cosmic-comp",
         "type": "github"
       }
@@ -20,16 +20,16 @@
     "cosmic-greeter": {
       "flake": false,
       "locked": {
-        "lastModified": 1789646568,
-        "narHash": "sha256-OjFOHlKWUltO0gLEjfFlLwlGY2L3sfrFVMxa4cH0UFM=",
+        "lastModified": 1789887306,
+        "narHash": "sha256-Bp+UPtE2AXrIdRh2ShdmLp4gCfEf2/4aaPx8XVHcAAk=",
         "owner": "Pheoxy",
         "repo": "cosmic-greeter",
-        "rev": "4217c4aca15e2d01fee87d40843fe19866aa511f",
+        "rev": "e7aa0a8fd30f98f56548743be48384757896c077",
         "type": "github"
       },
       "original": {
         "owner": "Pheoxy",
-        "ref": "output-identity-edid-serial",
+        "ref": "output-identity-epoch-1.8.0",
         "repo": "cosmic-greeter",
         "type": "github"
       }
@@ -37,16 +37,16 @@
     "cosmic-settings": {
       "flake": false,
       "locked": {
-        "lastModified": 1789528928,
-        "narHash": "sha256-S+X0Y0ObKc2WHhR7lXS+HyijyvtCxxTR3ieynA3kpS8=",
+        "lastModified": 1789887799,
+        "narHash": "sha256-GdSmhUuKOF3csa1TzQJUC64vyDtO1AxuZZGeSryi94o=",
         "owner": "Pheoxy",
         "repo": "cosmic-settings",
-        "rev": "12a2a91747dc3fab10240adee85c6ae361053d4a",
+        "rev": "bd24c402f685e6f47a049087ed3d1c4d9a69c371",
         "type": "github"
       },
       "original": {
         "owner": "Pheoxy",
-        "ref": "night-light-vulkan",
+        "ref": "night-light-epoch-1.8.0",
         "repo": "cosmic-settings",
         "type": "github"
       }
@@ -95,16 +95,16 @@
     "smithay": {
       "flake": false,
       "locked": {
-        "lastModified": 1789868123,
+        "lastModified": 1789882804,
         "narHash": "sha256-rovgdxfxHO1JCDfDsGg6dBn89xcY6ZbhKjUxfD/kMWM=",
         "owner": "Pheoxy",
         "repo": "smithay",
-        "rev": "4a75341007af97900656a96a86165aa86f5c528a",
+        "rev": "59cc43aa11b8065cc6eebb0502175bf486886d96",
         "type": "github"
       },
       "original": {
         "owner": "Pheoxy",
-        "ref": "add-vulkan-renderer-support-cosmic-e3d461a",
+        "ref": "add-vulkan-renderer-support-epoch-1.8.0",
         "repo": "smithay",
         "type": "github"
       }
