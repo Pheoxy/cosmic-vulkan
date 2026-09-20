@@ -1,6 +1,16 @@
 {
   description = "NixOS overlay: COSMIC compositor + greeter + settings with VulkanRenderer smithay (e3d461a pin). Bring-up toggle, not default GLES. Tracks smithay, cosmic-comp, cosmic-greeter, and cosmic-settings as the four individual project checkouts this effort spans.";
 
+  # Public binary cache with the outputs this flake builds (the four fork
+  # packages, release and debug). Optional: Nix asks before trusting it, and
+  # everything still builds from source without it.
+  nixConfig = {
+    extra-substituters = [ "https://camelot-network.cachix.org" ];
+    extra-trusted-public-keys = [
+      "camelot-network.cachix.org-1:rUls6tVSl0YGNvT7NZ54R5Ix9RRdwfJSC1OY8DaxLZk="
+    ];
+  };
+
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     smithay.url = "github:Pheoxy/smithay/add-vulkan-renderer-support-epoch-1.8.0";

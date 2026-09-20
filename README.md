@@ -59,6 +59,25 @@ specialisation.cosmic-vulkan.configuration = {
 Pick the resulting boot entry to try the Vulkan renderer; reboot into the
 untagged generation to go back to GLES.
 
+### Binary cache
+
+Built outputs (`cosmic-comp`, `cosmic-greeter`, `cosmic-settings` forks in
+release and debug, plus `pop-launcher`/`cosmic-viewer`) are pushed to a
+public [Cachix](https://cachix.org) cache, so consuming the flake at a pinned
+revision is a download rather than a Rust build. The flake declares it in
+`nixConfig`; `nix` prompts once to accept it, or add it yourself:
+
+```nix
+nix.settings = {
+  substituters = [ "https://camelot-network.cachix.org" ];
+  trusted-public-keys = [
+    "camelot-network.cachix.org-1:rUls6tVSl0YGNvT7NZ54R5Ix9RRdwfJSC1OY8DaxLZk="
+  ];
+};
+```
+
+Nothing depends on the cache; without it everything builds from source.
+
 ### Build tooling
 
 `cosmic-comp`, `cosmic-greeter`, and `cosmic-settings` are all built via
