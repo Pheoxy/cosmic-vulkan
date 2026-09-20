@@ -88,6 +88,18 @@ craneLib.buildPackage (
     ];
     installPhaseCommand = "make $makeFlags install";
 
+    # cosmic-comp spawns `xrdb -merge` (src/xwayland.rs, upstream PR #1976)
+    # to set `Xcursor.size`/`Xcursor.theme` on the Xwayland display; without
+    # it on PATH it logs "`xrdb` not found" and X11 clients (Steam,
+    # Wine/Proton) fall back to libXcursor's screen-derived default, so their
+    # cursors render at ~2x the compositor's. nixpkgs' own package.nix doesn't
+    # wrap it either (Pop!_OS gets it from x11-xserver-utils via the desktop
+    # meta-package) - same pattern nixpkgs uses for cosmic-initial-setup's
+    # `killall`. Tracked in ISSUES.md.
+    preFixup = ''
+      libcosmicAppWrapperArgs+=(--prefix PATH : ${pkgs.lib.makeBinPath [ (pkgs.xrdb or pkgs.xorg.xrdb) ]})
+    '';
+
     env.NIX_MAIN_PROGRAM = "cosmic-comp";
 
     meta = {
