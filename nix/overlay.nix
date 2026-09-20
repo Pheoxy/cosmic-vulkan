@@ -93,6 +93,24 @@ let
 in
 epochLayer
 // {
+  # libcosmicAppHook (nixpkgs' wrapper hook for every libcosmic app) symlinks
+  # cosmic-settings' share/cosmic into each app's XDG_DATA_DIRS fallback and
+  # takes that cosmic-settings through the overlay fixpoint. Because this
+  # overlay replaces cosmic-settings, every libcosmic app (cosmic-panel,
+  # cosmic-applets, xdg-desktop-portal-cosmic, ...) would otherwise get a
+  # different hook hash and rebuild from source instead of coming from the
+  # binary cache - and a NixOS specialisation using this overlay would
+  # rebuild the whole desktop again separately from the default boot. Pin
+  # the hook to the unpatched cosmic-settings (share/cosmic is icons and
+  # schemas only, verified byte-identical between stock and the fork) so the
+  # hook - and every app wrapped by it - stays the stock derivation.
+  libcosmicAppHook = prev.libcosmicAppHook.override {
+    cosmic-settings = base.cosmic-settings;
+    targetPackages = prev.targetPackages // {
+      cosmic-settings = base.cosmic-settings;
+    };
+  };
+
   cosmic-comp = import ./cosmic-comp-crane.nix {
     pkgs = prev;
     inherit crane;

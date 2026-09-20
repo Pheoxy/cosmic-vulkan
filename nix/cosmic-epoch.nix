@@ -45,45 +45,56 @@ let
       meta.mainProgram = "xdgen-generate";
     };
 
+  # Only override a package when nixpkgs is *not* already at the target
+  # release. When it is, return nixpkgs' derivation untouched so it stays
+  # byte-identical to the one on cache.nixos.org (any overrideAttrs - even
+  # `doCheck = false` - changes the derivation hash and forces a local
+  # rebuild of the whole desktop for nothing).
   bump =
     name: spec:
-    prev.${name}.overrideAttrs (
-      old:
-      let
-        version = spec.version or epoch;
-        src = old.src.override (
-          lib.optionalAttrs (!(spec ? rev)) { tag = "epoch-${version}"; }
-          // lib.optionalAttrs (spec ? rev) { inherit (spec) rev; }
-          // lib.optionalAttrs (spec ? src) { hash = spec.src; }
-          // lib.optionalAttrs (spec ? sha256) { sha256 = spec.sha256; }
-        );
-      in
-      {
-        inherit version src;
-        doCheck = false;
-      }
-      // lib.optionalAttrs (spec ? cargoHash) {
-        cargoHash = spec.cargoHash;
-        cargoDeps = rustPlatform.fetchCargoVendor {
-          inherit src version;
-          inherit (old) pname;
-          hash = spec.cargoHash;
-        };
-      }
-      // lib.optionalAttrs ((old.env or { }) ? VERGEN_GIT_SHA) {
-        env = old.env // {
-          VERGEN_GIT_SHA = if spec ? rev then spec.rev else "epoch-${version}";
-        };
-      }
-      // lib.optionalAttrs (spec ? xdgenCargoHash) {
-        preInstall = ''
-          env \
-            APP_ID=${spec.xdgenAppId} \
-            APP_NAME=${spec.xdgenAppName} \
-            ${lib.getExe (xdgen "${src}/scripts/xdgen" spec.xdgenCargoHash)}
-        '';
-      }
-    );
+    let
+      version = spec.version or epoch;
+      aligned = (prev.${name}.version or null) == version;
+    in
+    if aligned then
+      prev.${name}
+    else
+      prev.${name}.overrideAttrs (
+        old:
+        let
+          src = old.src.override (
+            lib.optionalAttrs (!(spec ? rev)) { tag = "epoch-${version}"; }
+            // lib.optionalAttrs (spec ? rev) { inherit (spec) rev; }
+            // lib.optionalAttrs (spec ? src) { hash = spec.src; }
+            // lib.optionalAttrs (spec ? sha256) { sha256 = spec.sha256; }
+          );
+        in
+        {
+          inherit version src;
+          doCheck = false;
+        }
+        // lib.optionalAttrs (spec ? cargoHash) {
+          cargoHash = spec.cargoHash;
+          cargoDeps = rustPlatform.fetchCargoVendor {
+            inherit src version;
+            inherit (old) pname;
+            hash = spec.cargoHash;
+          };
+        }
+        // lib.optionalAttrs ((old.env or { }) ? VERGEN_GIT_SHA) {
+          env = old.env // {
+            VERGEN_GIT_SHA = if spec ? rev then spec.rev else "epoch-${version}";
+          };
+        }
+        // lib.optionalAttrs (spec ? xdgenCargoHash) {
+          preInstall = ''
+            env \
+              APP_ID=${spec.xdgenAppId} \
+              APP_NAME=${spec.xdgenAppName} \
+              ${lib.getExe (xdgen "${src}/scripts/xdgen" spec.xdgenCargoHash)}
+          '';
+        }
+      );
 
   specs = {
     cosmic-app-library = {
